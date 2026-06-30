@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAUUSD — ศูนย์ควบคุม Bot</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#13161a; --panel2:#171b20; --border:#23282f;
+    --green:#1fd17a; --red:#ff4d5e; --orange:#f2a93b; --blue:#3b9af2;
+    --txt:#e7e9ec; --muted:#8a909a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;}
+  header{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:#0e1013;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+  .title{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;}
+  .badge{background:#1c2128;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;color:var(--muted);}
+  .status{display:flex;align-items:center;gap:6px;color:var(--green);font-size:13px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+
+  main{padding:18px 22px;max-width:1300px;margin:0 auto;}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;}
+  .card .lbl{color:var(--muted);font-size:12px;margin-bottom:6px;}
+  .card .val{font-size:22px;font-weight:700;}
+  .card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;}
+  .panel h3{margin:0 0 12px;font-size:14px;color:var(--muted);font-weight:600;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:1px solid var(--border);}
+  td{padding:8px;border-bottom:1px solid #1a1d22;}
+  .sell{color:var(--red);}
+  .buy{color:var(--green);}
+  .pos{color:var(--green);}
+  .neg{color:var(--red);}
+
+  .order-form{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:end;}
+  .order-form label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;}
+  select,input{width:100%;background:#0e1013;border:1px solid var(--border);color:var(--txt);padding:8px;border-radius:6px;font-size:13px;}
+  button{cursor:pointer;border:none;border-radius:6px;padding:9px 14px;font-weight:600;font-size:13px;}
+  .btn-buy{background:var(--green);color:#06210f;}
+  .btn-sell{background:var(--red);color:#240a0d;}
+  .btn-buy:hover,.btn-sell:hover{filter:brightness(1.1);}
+  #log{font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap;max-height:140px;overflow:auto;background:#0e1013;border-radius:6px;padding:8px;}
+  .ea-pill{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);}
+  .ea-on{color:var(--green);border-color:var(--green);}
+  .ea-off{color:var(--red);border-color:var(--red);}
+
+  .strat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .strat-header h2{font-size:14px;margin:0;color:var(--muted);font-weight:600;}
+  .threshold-badge{font-size:11px;background:#1c2128;border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--muted);}
+  .strat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:900px){.strat-grid{grid-template-columns:1fr;} .cards{grid-template-columns:repeat(2,1fr);}}
+
+  .strat-card{border-radius:10px;padding:14px;border:1px solid var(--border);background:var(--panel);}
+  .strat-card.bias-sell{border-color:#3a1c20;}
+  .strat-card.bias-buy{border-color:#1c3a28;}
+  .strat-card.bias-flat{border-color:var(--border);}
+  .strat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .strat-name{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px;}
+  .strat-pct{display:flex;align-items:center;gap:8px;}
+  .bias-tag{font-size:11px;padding:2px 8px;border-radius:5px;font-weight:600;}
+  .bias-tag.sell{background:#2a1216;color:var(--red);}
+  .bias-tag.buy{background:#0f2418;color:var(--green);}
+  .bias-tag.flat{background:#1c2128;color:var(--muted);}
+  .score{font-size:18px;font-weight:700;}
+  .score.sell{color:var(--red);} .score.buy{color:var(--green);} .score.flat{color:var(--muted);}
+  .strat-meta{font-size:11px;color:var(--muted);margin-bottom:8px;}
+  .meter{height:5px;background:#1a1d22;border-radius:3px;overflow:hidden;margin-bottom:10px;}
+  .meter-fill{height:100%;border-radius:3px;}
+  .meter-fill.sell{background:var(--red);} .meter-fill.buy{background:var(--green);} .meter-fill.flat{background:var(--orange);}
+  .cond-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;}
+  .cond-row .cname{display:flex;align-items:center;gap:6px;}
+  .cond-row .cname::before{content:"●";font-size:8px;color:#3a3f47;}
+  .cond-row.met .cname::before{color:var(--red);}
+  .cond-row.met.buy-row .cname::before{color:var(--green);}
+  .cond-row .cfrac{color:var(--muted);}
+  .signal-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;}
+  .signal-bar{padding:6px 12px;border-radius:6px;font-weight:600;font-size:12px;}
+  .signal-bar.sell{background:#2a1216;color:var(--red);}
+  .signal-bar.buy{background:#0f2418;color:var(--green);}
+  .signal-bar.flat{background:#1c2128;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    ⚡ XAUUSD — ศูนย์ควบคุม Bot
+    <span class="badge">DEMO</span>
+    <span class="badge">587643</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="status"><span class="dot"></span> กำลังทำงาน</div>
+    <span id="eaStatus" class="ea-pill ea-off">EA: ยังไม่เชื่อมต่อ</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="cards">
+    <div class="card"><div class="lbl">ยอดเงิน (Balance)</div><div class="val" id="cBalance">--</div><div class="sub">USD</div></div>
+    <div class="card"><div class="lbl">Equity</div><div class="val" id="cEquity">--</div><div class="sub" id="cFloating">--</div></div>
+    <div class="card"><div class="lbl">กำไร/ขาดทุนวันนี้</div><div class="val" id="cPnl">--</div></div>
+    <div class="card"><div class="lbl">Drawdown ปัจจุบัน</div><div class="val" id="cDD">--</div></div>
+    <div class="card"><div class="lbl">Free Margin</div><div class="val" id="cMargin">--</div></div>
+  </div>
+
+  <div class="panel">
+    <h3>📤 ส่งคำสั่งเทรดไปยัง MT5 (ผ่าน EA)</h3>
+    <form class="order-form" id="orderForm">
+      <div>
+        <label>Symbol</label>
+        <input name="symbol" value="XAUUSD" required>
+      </div>
+      <div>
+        <label>Lot</label>
+        <input name="lot" type="number" step="0.01" value="0.10" required>
+      </div>
+      <div>
+        <label>SL (price)</label>
+        <input name="sl" type="number" step="0.01" placeholder="optional">
+      </div>
+      <div>
+        <label>TP (price)</label>
+        <input name="tp" type="number" step="0.01" placeholder="optional">
+      </div>
+      <div>
+        <label>กลยุทธ์ (tag)</label>
+        <input name="strategy" placeholder="เช่น Supply&Demand">
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button type="submit" class="btn-buy" data-side="BUY">▲ BUY</button>
+        <button type="submit" class="btn-sell" data-side="SELL">▼ SELL</button>
+      </div>
+    </form>
+    <div id="log">รอคำสั่ง... EA ต้องตั้งค่า ApiUrl และ ApiKey ให้ตรงกับ Vercel ที่ deploy</div>
+  </div>
+
+  <div class="panel">
+    <h3>📋 Positions ที่เปิดอยู่</h3>
+    <table>
+      <thead><tr><th>Ticket</th><th>ทิศทาง</th><th>Lot</th><th>SL</th><th>TP</th><th>P&L</th><th>กลยุทธ์</th><th></th></tr></thead>
+      <tbody id="posBody"><tr><td colspan="8" style="color:var(--muted);">ยังไม่มีข้อมูลจาก EA — กรุณาเชื่อมต่อ EA และยืนยันการ push สถานะ</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3>📜 คำสั่งล่าสุดที่ส่งไป (Pending Queue)</h3>
+    <table>
+      <thead><tr><th>เวลา</th><th>Symbol</th><th>ทิศทาง</th><th>Lot</th><th>สถานะ</th></tr></thead>
+      <tbody id="queueBody"><tr><td colspan="5" style="color:var(--muted);">ไม่มีคำสั่งในคิว</td></tr></tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <div class="strat-header">
+      <h2>🧠 STRATEGY INTELLIGENCE — คะแนนความพร้อมแต่ละกลยุทธ์</h2>
+      <span class="threshold-badge">THRESHOLD: <span id="thresholdVal">65</span>%</span>
+    </div>
+    <div class="strat-grid" id="strategyGrid">
+      <div style="color:var(--muted);grid-column:1/-1;">ยังไม่มีข้อมูลจาก EA — ตรวจสอบว่า EA push เข้า /api/strategies แล้ว</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API_BASE = ""; // same-origin on Vercel, e.g. https://yourapp.vercel.app
+
+function log(msg){
+  const el = document.getElementById('log');
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.textContent;
+}
+
+document.getElementById('orderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const side = e.submitter.dataset.side;
+  const fd = new FormData(e.target);
+  const payload = {
+    side,
+    symbol: fd.get('symbol'),
+    lot: parseFloat(fd.get('lot')),
+    sl: fd.get('sl') ? parseFloat(fd.get('sl')) : null,
+    tp: fd.get('tp') ? parseFloat(fd.get('tp')) : null,
+    strategy: fd.get('strategy') || '',
+  };
+  try{
+    const res = await fetch(API_BASE + '/api/orders', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(res.ok){
+      log(`ส่งคำสั่ง ${side} ${payload.symbol} ${payload.lot} lot สำเร็จ — รอ EA ดึงไปเปิดออเดอร์`);
+      loadQueue();
+    } else {
+      log('ผิดพลาด: ' + (data.error || res.status));
+    }
+  }catch(err){
+    log('เชื่อมต่อ API ไม่ได้: ' + err.message);
+  }
+});
+
+async function loadQueue(){
+  try{
+    const res = await fetch(API_BASE + '/api/orders');
+    const data = await res.json();
+    const body = document.getElementById('queueBody');
+    if(!data.orders || data.orders.length === 0){
+      body.innerHTML = '<tr><td colspan="5" style="color:var(--muted);">ไม่มีคำสั่งในคิว</td></tr>';
+      return;
+    }
+    body.innerHTML = data.orders.slice(-10).reverse().map(o => `
+      <tr>
+        <td>${new Date(o.createdAt).toLocaleTimeString()}</td>
+        <td>${o.symbol}</td>
+        <td class="${o.side==='BUY'?'buy':'sell'}">${o.side}</td>
+        <td>${o.lot}</td>
+        <td>${o.status}</td>
+      </tr>`).join('');
+  }catch(err){}
+}
+
+async function loadStatus(){
+  try{
+    const res = await fetch(API_BASE + '/api/account');
+    if(!res.ok) return;
+    const d = await res.json();
+    if(!d.account) return;
+    document.getElementById('cBalance').textContent = '$' + d.account.balance.toLocaleString();
+    document.getElementById('cEquity').textContent = '$' + d.account.equity.toLocaleString();
+    document.getElementById('cFloating').textContent = (d.account.floating>=0?'+':'') + d.account.floating.toFixed(2) + ' USD';
+    document.getElementById('cPnl').textContent = (d.account.pnl>=0?'+':'') + d.account.pnl.toFixed(2) + ' USD';
+    document.getElementById('cDD').textContent = d.account.drawdown.toFixed(2) + '%';
+    document.getElementById('cMargin').textContent = '$' + d.account.freeMargin.toLocaleString();
+    document.getElementById('eaStatus').textContent = 'EA: เชื่อมต่อแล้ว';
+    document.getElementById('eaStatus').className = 'ea-pill ea-on';
+
+    const posBody = document.getElementById('posBody');
+    if(d.positions && d.positions.length){
+      posBody.innerHTML = d.positions.map(p => `
+        <tr>
+          <td>#${p.ticket}</td>
+          <td class="${p.side==='BUY'?'buy':'sell'}">${p.side}</td>
+          <td>${p.lot}</td>
+          <td>${p.sl ?? '-'}</td>
+          <td>${p.tp ?? '-'}</td>
+          <td class="${p.pnl>=0?'pos':'neg'}">${p.pnl>=0?'+':''}${p.pnl.toFixed(2)}</td>
+          <td>${p.strategy||'-'}</td>
+          <td>-</td>
+        </tr>`).join('');
+    }
+  }catch(err){}
+}
+
+function biasClass(bias){
+  if(bias === 'BUY') return 'buy';
+  if(bias === 'SELL') return 'sell';
+  return 'flat';
+}
+
+async function loadStrategies(){
+  try{
+    const res = await fetch(API_BASE + '/api/strategies');
+    if(!res.ok) return;
+    const data = await res.json();
+    const grid = document.getElementById('strategyGrid');
+    if(!data.strategies || data.strategies.length === 0){
+      grid.innerHTML = '<div style="color:var(--muted);grid-column:1/-1;">ยังไม่มีข้อมูลจาก EA — ตรวจสอบว่า EA push เข้า /api/strategies แล้ว</div>';
+      return;
+    }
+    grid.innerHTML = data.strategies.map(s => {
+      const cls = biasClass(s.tradeReady ? s.bias : 'flat');
+      const conds = s.conditions.map(c => `
+        <div class="cond-row ${c.met?'met':''} ${cls==='buy'?'buy-row':''}">
+          <span class="cname">${c.name}</span>
+          <span class="cfrac">${c.weight}/${c.max}</span>
+        </div>`).join('');
+      const tradeLabel = s.tradeReady
+        ? `${s.bias === 'BUY' ? '▲' : '▼'} Trade ${s.bias}`
+        : '— รอสัญญาณ';
+      return `
+        <div class="strat-card bias-${cls}">
+          <div class="strat-top">
+            <div class="strat-name">${s.label}</div>
+            <div class="strat-pct">
+              <span class="bias-tag ${cls}">${s.tradeReady ? (s.bias==='BUY'?'▲ BUY':'▼ SELL') : '—'}</span>
+              <span class="score ${cls}">${s.score}%</span>
+            </div>
+          </div>
+          <div class="meter"><div class="meter-fill ${cls}" style="width:${s.score}%"></div></div>
+          ${conds}
+          <div class="signal-row">
+            <span>น้ำหนักเทรงไปทาง ${s.bias} (${s.conditions.filter(c=>c.met).length}/${s.conditions.length} เงื่อนไขผ่าน)</span>
+            <span class="signal-bar ${cls}">${tradeLabel}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }catch(err){}
+}
+
+loadQueue();
+loadStatus();
+loadStrategies();
+setInterval(loadQueue, 5000);
+setInterval(loadStatus, 5000);
+setInterval(loadStrategies, 5000);
+</script>
+</body>
+</html>
