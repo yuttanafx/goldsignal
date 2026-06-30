@@ -1,32 +1,41 @@
 import { GoogleGenAI } from '@google/genai';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  // บังคับให้รับคำขอผ่าน POST เท่านั้น
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
 
   try {
-    const { user_api_key, ai_model, symbols_to_analyze, account_summary } = req.body;
+    const { user_api_key, ai_model, market_data } = req.body;
 
-    if (!user_api_key || !symbols_to_analyze) {
-      return res.status(400).json({ error: 'ข้อมูลไม่ครบถ้วน' });
+    if (!user_api_key) {
+      return res.status(400).json({ error: 'กรุณากรอก API Key บนหน้าจอก่อนใช้งาน' });
     }
 
+    // เรียกใช้ SDK ของ Google โดยการส่ง Key ตรงไปตรงมาจาก Client หน้าบราวเซอร์ของคุณ
     const ai = new GoogleGenAI({ apiKey: user_api_key });
 
     const systemInstruction = `
-      คุณคือระบบคัดกรองทางเทคนิคอัจฉริยะ (AI Asset Screener) หน้าที่ของคุณคือวิเคราะห์สภาวะตลาดของสัญลักษณ์ที่ได้รับในอาเรย์ symbols_to_analyze
+      คุณคือ AI ผู้เชี่ยวชาญระดับสูงด้านสถิติการลงทุนและผู้ดูแลความเสี่ยงของระบบเทรดทองคำ (XAUUSD Expert Advisor) 
+      หน้าที่ของคุณคือการวิเคราะห์ตัวเลขสถิติของพอร์ตและข้อมูลความพร้อมที่ส่งมาให้แบบ Real-time
       
-      ให้คุณจำลองหรือใช้ความรู้ด้านเทคนิคอินดิเคเตอร์ (เช่น RSI, MACD, Moving Average ปัจจุบันของสินค้าแต่ละประเภท เช่น ทองคำ หรือ Bitcoin) ร่วมกับข้อมูลพอร์ต
-      เพื่อประเมินแนวโน้มตลาดออกมาเป็นสัญลักษณ์ละหนึ่งค่าคือ "BUY", "SELL", หรือ "FLAT" เท่านั้น 
-      
-      ให้ประมวลผลลัพธ์ตอบกลับมาในรูปแบบ JSON วัตถุตรงๆ ห้ามอธิบายใดๆ นอกโครงสร้างนี้:
+      ให้ประมวลผลคำตอบออกมาในรูปแบบโครงสร้าง JSON ภาษาไทย เท่านั้น (ห้ามพิมพ์ข้อความอธิบายใดๆ ด้านนอก) ตาม Format นี้:
       {
-        "trends": {
-          "XAUUSD": "BUY",
-          "BTCUSD": "SELL",
-          "EURUSD": "FLAT"
-        }
+        "portfolio_summary": "สรุปผลประกอบการปัจจุบัน ความเสี่ยงที่พบใน Position ที่ถืออยู่ และคำแนะนำสั้นๆ 1-2 ประโยค",
+        "risk_alert_level": "LOW / MEDIUM / HIGH",
+        "strategies_readiness": [
+          {
+            "name": "ชื่อกลยุทธ์ (ให้ตรงกับช่อง label ของข้อมูลที่ส่งมา)",
+            "readiness_score": 85, 
+            "reason": "อธิบายเหตุผลสั้นๆ 1 ประโยคว่าสภาวะตลาดหรือค่าสถิตินี้ ทำไมจึงควรเปิดหรือปิดการทำงานของกลยุทธ์นี้"
+          }
+        ]
       }
-      *(ให้ตรวจสอบสัญลักษณ์ตามที่ส่งไปในชุดข้อมูลจริง หากหน้าบ้านเพิ่มตัวไหนเข้ามา ให้เพิ่มตัวนั้นเข้าใน object trends ด้วย)*
+      
+      หลักเกณฑ์พิจารณาความพร้อม (Readiness Score):
+      - หากพอร์ตมีค่า Drawdown ปัจจุบันสูงเกิน 5% หรือ Free Margin เริ่มเหลือน้อย ให้พิจารณาปรับคะแนนความพร้อมลดลงต่ำกว่า 65% ในกลยุทธ์ที่มีความเสี่ยงสูง
+      - ให้คำนวณสัดส่วนชนะ (Win rate) ควบคู่กับจำนวนเงื่อนไขผ่านในตัวแปรกลยุทธ์
     `;
 
     const response = await ai.models.generateContent({
@@ -34,14 +43,16 @@ export default async function handler(req, res) {
       config: {
         responseMimeType: 'application/json',
         systemInstruction: systemInstruction,
-        temperature: 0.2
+        temperature: 0.3 // ตั้งค่าความแม่นยำต่ำเพื่อให้ประมวลผลตัวเลขคงที่ ไม่มโนไปเอง
       },
-      contents: `จงวิเคราะห์สัญลักษณ์เหล่านี้ตามข้อมูลอินดิเคเตอร์ล่าสุดปัจจุบัน: ${JSON.stringify(symbols_to_analyze)}`
+      contents: JSON.stringify(market_data)
     });
 
-    return res.status(200).json(JSON.parse(response.text));
+    const aiAnalysis = JSON.parse(response.text);
+    return res.status(200).json(aiAnalysis);
 
   } catch (error) {
-    return res.status(500).json({ error: 'AI Screener Failed' });
+    console.error("Gemini API Error:", error);
+    return res.status(500).json({ error: 'การตรวจสอบผ่าน AI ล้มเหลว โปรดตรวจสอบ API Key ของคุณ' });
   }
 }
