@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multi-Asset — ศูนย์ควบคุม Bot & AI</title>
+<title>XAUUSD — ศูนย์ควบคุม Bot</title>
 <style>
   :root{
     --bg:#0b0d10; --panel:#13161a; --panel2:#171b20; --border:#23282f;
@@ -19,36 +19,27 @@
   .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
 
   main{padding:18px 22px;max-width:1300px;margin:0 auto;}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;}
+  .card .lbl{color:var(--muted);font-size:12px;margin-bottom:6px;}
+  .card .val{font-size:22px;font-weight:700;}
+  .card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;}
   .panel h3{margin:0 0 12px;font-size:14px;color:var(--muted);font-weight:600;}
 
   /* AI Settings Bar */
   .ai-settings-grid {display:grid; grid-template-columns: 2.5fr 1.5fr 1fr; gap: 12px; align-items: end;}
   .ai-box {border: 1px solid #3b9af233; background: linear-gradient(135deg, #13161a 0%, #0e1c2b 100%);}
-  
-  /* --- ส่วนที่เพิ่มใหม่: แผงปุ่มสัญลักษณ์ตามแนวโน้ม --- */
-  .symbol-manage-form {display: flex; gap: 8px; margin-bottom: 12px;}
-  .symbol-manage-form input {max-width: 200px;}
-  .btn-add {background: var(--blue); color: #061b2e; font-weight: 600;}
-  
-  .symbol-buttons-container {display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;}
-  .sym-btn {
-    padding: 12px 20px; border-radius: 8px; font-weight: 700; font-size: 14px;
-    border: 1px solid var(--border); background: #1c2128; color: var(--txt);
-    display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 120px; transition: all 0.3s;
-  }
-  .sym-btn .trend-lbl {font-size: 11px; font-weight: 500; opacity: 0.8;}
-  /* สีตามแนวโน้มตลาด */
-  .sym-btn.trend-buy {background: #0f2418; border-color: var(--green); color: var(--green); box-shadow: 0 0 8px rgba(31,209,122,0.2);}
-  .sym-btn.trend-sell {background: #2a1216; border-color: var(--red); color: var(--red); box-shadow: 0 0 8px rgba(255,77,94,0.2);}
-  .sym-btn.trend-flat {background: #171b20; border-color: var(--border); color: var(--muted);}
+  .ai-brief {padding: 10px; background: #0e1013; border-radius: 6px; font-size: 13px; line-height: 1.5; border-left: 4px solid var(--blue); margin-top: 10px;}
 
-  /* เดิม */
-  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;}
-  .card .lbl{color:var(--muted);font-size:12px;margin-bottom:6px;}
-  .card .val{font-size:22px;font-weight:700;}
-  .card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:1px solid var(--border);}
+  td{padding:8px;border-bottom:1px solid #1a1d22;}
+  .sell{color:var(--red);}
+  .buy{color:var(--green);}
+  .pos{color:var(--green);}
+  .neg{color:var(--red);}
 
   .order-form{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:end;}
   .order-form label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;}
@@ -57,25 +48,67 @@
   .btn-buy{background:var(--green);color:#06210f;}
   .btn-sell{background:var(--red);color:#240a0d;}
   .btn-blue{background:var(--blue);color:#061b2e;width:100%;}
-  #log{font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap;max-height:100px;overflow:auto;background:#0e1013;border-radius:6px;padding:8px;}
+  .btn-buy:hover,.btn-sell:hover,.btn-blue:hover{filter:brightness(1.1);}
+  #log{font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap;max-height:140px;overflow:auto;background:#0e1013;border-radius:6px;padding:8px;}
+  .ea-pill{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);}
+  .ea-on{color:var(--green);border-color:var(--green);}
+  .ea-off{color:var(--red);border-color:var(--red);}
+
+  .strat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .strat-header h2{font-size:14px;margin:0;color:var(--muted);font-weight:600;}
+  .threshold-badge{font-size:11px;background:#1c2128;border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--muted);}
+  .strat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:900px){.strat-grid{grid-template-columns:1fr;} .cards{grid-template-columns:repeat(2,1fr);}}
+
+  .strat-card{border-radius:10px;padding:14px;border:1px solid var(--border);background:var(--panel);}
+  .strat-card.bias-sell{border-color:#3a1c20;}
+  .strat-card.bias-buy{border-color:#1c3a28;}
+  .strat-card.bias-flat{border-color:var(--border);}
+  .strat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .strat-name{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px;}
+  .strat-pct{display:flex;align-items:center;gap:8px;}
+  .bias-tag{font-size:11px;padding:2px 8px;border-radius:5px;font-weight:600;}
+  .bias-tag.sell{background:#2a1216;color:var(--red);}
+  .bias-tag.buy{background:#0f2418;color:var(--green);}
+  .bias-tag.flat{background:#1c2128;color:var(--muted);}
+  .score{font-size:18px;font-weight:700;}
+  .score.sell{color:var(--red);} .score.buy{color:var(--green);} .score.flat{color:var(--muted);}
+  .strat-meta{font-size:11px;color:var(--muted);margin-bottom:8px;}
+  .meter{height:5px;background:#1a1d22;border-radius:3px;overflow:hidden;margin-bottom:10px;}
+  .meter-fill{height:100%;border-radius:3px;}
+  .meter-fill.sell{background:var(--red);} .meter-fill.buy{background:var(--green);} .meter-fill.flat{background:var(--orange);}
+  .cond-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;}
+  .cond-row .cname{display:flex;align-items:center;gap:6px;}
+  .cond-row .cname::before{content:"●";font-size:8px;color:#3a3f47;}
+  .cond-row.met .cname::before{color:var(--red);}
+  .cond-row.met.buy-row .cname::before{color:var(--green);}
+  .cond-row .cfrac{color:var(--muted);}
+  .signal-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;}
+  .signal-bar{padding:6px 12px;border-radius:6px;font-weight:600;font-size:12px;}
+  .signal-bar.sell{background:#2a1216;color:var(--red);}
+  .signal-bar.buy{background:#0f2418;color:var(--green);}
+  .signal-bar.flat{background:#1c2128;color:var(--muted);}
+  
+  /* AI Intelligence UI additions */
+  .ai-reason {font-size: 11px; color: var(--muted); margin-top: 4px; border-top: 1px dashed var(--border); padding-top: 4px;}
 </style>
 </head>
 <body>
 
 <header>
   <div class="title">
-    ⚡ MULTI-ASSET CONTROL — ศูนย์ควบคุมด้วย AI
-    <span class="badge">LIVE SYSTEM</span>
+    ⚡ XAUUSD — ศูนย์ควบคุม Bot
+    <span class="badge">DEMO</span>
+    <span class="badge">587643</span>
   </div>
   <div style="display:flex;align-items:center;gap:14px;">
-    <div class="status"><span class="dot"></span> ระบบกรองสัญญาณทำงาน</div>
+    <div class="status"><span class="dot"></span> กำลังทำงาน</div>
     <span id="eaStatus" class="ea-pill ea-off">EA: ยังไม่เชื่อมต่อ</span>
   </div>
 </header>
 
 <main>
 
-  <!-- กล่องตั้งค่า AI Key -->
   <div class="panel ai-box">
     <h3 style="color:var(--blue)">🧠 AI INTELLIGENCE ADVISOR SETTINGS</h3>
     <div class="ai-settings-grid">
@@ -86,7 +119,7 @@
       <div>
         <label>โมเดล AI</label>
         <select id="aiModel">
-          <option value="gemini-2.5-flash">gemini-2.5-flash (แนะนำ - เร็ว เรียลไทม์)</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash (แนะนำ - เร็วและประหยัด)</option>
           <option value="gemini-2.5-pro">gemini-2.5-pro (เน้นวิเคราะห์ลึก)</option>
         </select>
       </div>
@@ -94,25 +127,11 @@
         <button onclick="saveAiSettings()" class="btn-blue">💾 บันทึกตั้งค่า</button>
       </div>
     </div>
-  </div>
-
-  <!-- --- ส่วนที่เพิ่มใหม่: บล็อกปุ่มสัญลักษณ์ตามแนวโน้มตลาด --- -->
-  <div class="panel">
-    <h3>📊 แผงสัญญาณแนวโน้มตลาด (Indicator + AI Filtered)</h3>
-    
-    <!-- ฟอร์มพิมพ์เพิ่มคู่เงิน/สัญลักษณ์ -->
-    <div class="symbol-manage-form">
-      <input type="text" id="newSymbolInput" placeholder="กรอกสัญลักษณ์ เช่น BTCUSD, XAUUSD" style="text-transform:uppercase;">
-      <button onclick="addNewSymbol()" class="btn-add">+ เพิ่มสัญลักษณ์</button>
-    </div>
-
-    <!-- บล็อกปุ่ม (Button Badges) จะเรียงกันตรงนี้ -->
-    <div class="symbol-buttons-container" id="symbolButtonsGrid">
-      <!-- ปุ่มเริ่มต้นเริ่มต้นจะงอกออกมาอัตโนมัติจากสคริปต์ -->
+    <div id="aiBriefBox" class="ai-brief" style="display:none;">
+      <strong>บทวิเคราะห์สถานะพอร์ตเชิงลึกโดย AI:</strong> <span id="aiBriefText">กำลังดึงข้อมูล...</span>
     </div>
   </div>
 
-  <!-- แผงภาพรวมบัญชี -->
   <div class="cards">
     <div class="card"><div class="lbl">ยอดเงิน (Balance)</div><div class="val" id="cBalance">--</div><div class="sub">USD</div></div>
     <div class="card"><div class="lbl">Equity</div><div class="val" id="cEquity">--</div><div class="sub" id="cFloating">--</div></div>
@@ -122,11 +141,11 @@
   </div>
 
   <div class="panel">
-    <h3>📤 ส่งคำสั่งเทรดไปยัง MT5</h3>
+    <h3>📤 ส่งคำสั่งเทรดไปยัง MT5 (ผ่าน EA)</h3>
     <form class="order-form" id="orderForm">
       <div>
         <label>Symbol</label>
-        <input name="symbol" id="orderSymbol" value="XAUUSD" required>
+        <input name="symbol" value="XAUUSD" required>
       </div>
       <div>
         <label>Lot</label>
@@ -142,88 +161,62 @@
       </div>
       <div>
         <label>กลยุทธ์ (tag)</label>
-        <input name="strategy" placeholder="เช่น AI_Signal">
+        <input name="strategy" placeholder="เช่น Supply&Demand">
       </div>
       <div style="display:flex;gap:8px;">
         <button type="submit" class="btn-buy" data-side="BUY">▲ BUY</button>
         <button type="submit" class="btn-sell" data-side="SELL">▼ SELL</button>
       </div>
     </form>
-    <div id="log">รอระบบเชื่อมต่อ...</div>
+    <div id="log">รอคำสั่ง... EA ต้องตั้งค่า ApiUrl และ ApiKey ให้ตรงกับ Vercel ที่ deploy</div>
+  </div>
+
+  <div class="panel">
+    <h3>📋 Positions ที่เปิดอยู่</h3>
+    <table>
+      <thead><tr><th>Ticket</th><th>ทิศทาง</th><th>Lot</th><th>SL</th><th>TP</th><th>P&L</th><th>กลยุทธ์</th><th></th></tr></thead>
+      <tbody id="posBody"><tr><td colspan="8" style="color:var(--muted);">ยังไม่มีข้อมูลจาก EA — กรุณาเชื่อมต่อ EA และยืนยันการ push สถานะ</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3>📜 คำสั่งล่าสุดที่ส่งไป (Pending Queue)</h3>
+    <table>
+      <thead><tr><th>เวลา</th><th>Symbol</th><th>ทิศทาง</th><th>Lot</th><th>สถานะ</th></tr></thead>
+      <tbody id="queueBody"><tr><td colspan="5" style="color:var(--muted);">ไม่มีคำสั่งในคิว</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="strat-header">
+      <h2>🧠 STRATEGY INTELLIGENCE — คะแนนความพร้อมแต่ละกลยุทธ์ (AI Evaluated)</h2>
+      <span class="threshold-badge">THRESHOLD: <span id="thresholdVal">65</span>%</span>
+    </div>
+    <div class="strat-grid" id="strategyGrid">
+      <div style="color:var(--muted);grid-column:1/-1;">ยังไม่มีข้อมูลจาก EA — ตรวจสอบว่า EA push เข้า /api/strategies แล้ว</div>
+    </div>
   </div>
 
 </main>
 
 <script>
 const API_BASE = ""; 
-// รายชื่อสัญลักษณ์เริ่มต้น สามารถพิมพ์เพิ่มจากหน้าจอได้เลย
-let trackedSymbols = ["XAUUSD", "BTCUSD", "EURUSD"];
-// ตัวแปรเก็บแนวโน้มที่ AI ประเมินกลับมา (เริ่มต้นเป็น FLAT)
-let symbolTrends = {
-  "XAUUSD": "FLAT",
-  "BTCUSD": "FLAT",
-  "EURUSD": "FLAT"
-};
+let globalAccountData = null;
+let globalStrategiesData = [];
 
+// ฟังก์ชันดึงและเซฟข้อมูล API Key
 window.addEventListener('DOMContentLoaded', () => {
   if(localStorage.getItem('ai_key')) document.getElementById('aiApiKey').value = localStorage.getItem('ai_key');
   if(localStorage.getItem('ai_model')) document.getElementById('aiModel').value = localStorage.getItem('ai_model');
-  if(localStorage.getItem('tracked_symbols')) {
-    trackedSymbols = JSON.parse(localStorage.getItem('tracked_symbols'));
-    trackedSymbols.forEach(s => { if(!symbolTrends[s]) symbolTrends[s] = "FLAT"; });
-  }
-  renderSymbolButtons();
 });
 
 function saveAiSettings() {
-  localStorage.setItem('ai_key', document.getElementById('aiApiKey').value);
-  localStorage.setItem('ai_model', document.getElementById('aiModel').value);
+  const key = document.getElementById('aiApiKey').value;
+  const model = document.getElementById('aiModel').value;
+  localStorage.setItem('ai_key', key);
+  localStorage.setItem('ai_model', model);
   log("บันทึกการตั้งค่า AI สำเร็จ");
-  runAiMultiAssetAnalysis();
-}
-
-// ฟังก์ชันเพิ่มสัญลักษณ์ใหม่จากหน้าจอ
-function addNewSymbol() {
-  const input = document.getElementById('newSymbolInput');
-  const sym = input.value.trim().toUpperCase();
-  if(sym && !trackedSymbols.includes(sym)) {
-    trackedSymbols.push(sym);
-    symbolTrends[sym] = "FLAT"; // ค่าเริ่มต้น
-    localStorage.setItem('tracked_symbols', JSON.stringify(trackedSymbols));
-    renderSymbolButtons();
-    input.value = "";
-    log(`เพิ่มสัญลักษณ์ ${sym} เข้าสู่ระบบตัวกรองสำเร็จ`);
-    runAiMultiAssetAnalysis(); // ให้ AI คำนวณสีใหม่ทันที
-  }
-}
-
-// ฟังก์ชันลบสัญลักษณ์ (ดับเบิ้ลคลิกเพื่อลบ)
-function removeSymbol(sym) {
-  trackedSymbols = trackedSymbols.filter(s => s !== sym);
-  delete symbolTrends[sym];
-  localStorage.setItem('tracked_symbols', JSON.stringify(trackedSymbols));
-  renderSymbolButtons();
-  log(`ลบสัญลักษณ์ ${sym} ออกจากระบบ`);
-}
-
-// วาดบล็อกปุ่มสัญลักษณ์เปลี่ยนสีตามแนวโน้ม
-function renderSymbolButtons() {
-  const container = document.getElementById('symbolButtonsGrid');
-  container.innerHTML = trackedSymbols.map(sym => {
-    const trend = symbolTrends[sym] || "FLAT";
-    let trendClass = "trend-flat";
-    let trendText = "⏳ FLAT / SIDEWAY";
-    
-    if(trend === "BUY") { trendClass = "trend-buy"; trendText = "▲ STRONG BUY"; }
-    else if(trend === "SELL") { trendClass = "trend-sell"; trendText = "▼ STRONG SELL"; }
-    
-    return `
-      <button class="sym-btn ${trendClass}" title="ดับเบิ้ลคลิกเพื่อลบ" ondblclick="removeSymbol('${sym}')" onclick="document.getElementById('orderSymbol').value='${sym}'">
-        <div>${sym}</div>
-        <div class="trend-lbl">${trendText}</div>
-      </button>
-    `;
-  }).join('');
+  runAiAdvisor();
 }
 
 function log(msg){
@@ -231,42 +224,204 @@ function log(msg){
   el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.textContent;
 }
 
-// ยิงข้อมููลพอร์ต + รายชื่อสัญลักษณ์ทั้งหมดไปให้ AI ช่วยกรองและเปลี่ยนสีปุ่ม
-async function runAiMultiAssetAnalysis() {
+document.getElementById('orderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const side = e.submitter.dataset.side;
+  const fd = new FormData(e.target);
+  const payload = {
+    side,
+    symbol: fd.get('symbol'),
+    lot: parseFloat(fd.get('lot')),
+    sl: fd.get('sl') ? parseFloat(fd.get('sl')) : null,
+    tp: fd.get('tp') ? parseFloat(fd.get('tp')) : null,
+    strategy: fd.get('strategy') || '',
+  };
+  try{
+    const res = await fetch(API_BASE + '/api/orders', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(res.ok){
+      log(`ส่งคำสั่ง ${side} ${payload.symbol} ${payload.lot} lot สำเร็จ — รอ EA ดึงไปเปิดออเดอร์`);
+      loadQueue();
+    } else {
+      log('ผิดพลาด: ' + (data.error || res.status));
+    }
+  }catch(err){
+    log('เชื่อมต่อ API ไม่ได้: ' + err.message);
+  }
+});
+
+async function loadQueue(){
+  try{
+    const res = await fetch(API_BASE + '/api/orders');
+    const data = await res.json();
+    const body = document.getElementById('queueBody');
+    if(!data.orders || data.orders.length === 0){
+      body.innerHTML = '<tr><td colspan="5" style="color:var(--muted);">ไม่มีคำสั่งในคิว</td></tr>';
+      return;
+    }
+    body.innerHTML = data.orders.slice(-10).reverse().map(o => `
+      <tr>
+        <td>${new Date(o.createdAt).toLocaleTimeString()}</td>
+        <td>${o.symbol}</td>
+        <td class="${o.side==='BUY'?'buy':'sell'}">${o.side}</td>
+        <td>${o.lot}</td>
+        <td>${o.status}</td>
+      </tr>`).join('');
+  }catch(err){}
+}
+
+async function loadStatus(){
+  try{
+    const res = await fetch(API_BASE + '/api/account');
+    if(!res.ok) return;
+    const d = await res.json();
+    if(!d.account) return;
+    globalAccountData = d; // เก็บไว้ให้ AI วิเคราะห์
+    
+    document.getElementById('cBalance').textContent = '$' + d.account.balance.toLocaleString();
+    document.getElementById('cEquity').textContent = '$' + d.account.equity.toLocaleString();
+    document.getElementById('cFloating').textContent = (d.account.floating>=0?'+':'') + d.account.floating.toFixed(2) + ' USD';
+    document.getElementById('cPnl').textContent = (d.account.pnl>=0?'+':'') + d.account.pnl.toFixed(2) + ' USD';
+    document.getElementById('cDD').textContent = d.account.drawdown.toFixed(2) + '%';
+    document.getElementById('cMargin').textContent = '$' + d.account.freeMargin.toLocaleString();
+    document.getElementById('eaStatus').textContent = 'EA: เชื่อมต่อแล้ว';
+    document.getElementById('eaStatus').className = 'ea-pill ea-on';
+
+    const posBody = document.getElementById('posBody');
+    if(d.positions && d.positions.length){
+      posBody.innerHTML = d.positions.map(p => `
+        <tr>
+          <td>#${p.ticket}</td>
+          <td><span class="${p.side==='BUY'?'buy':'sell'}">${p.side}</span></td>
+          <td>${p.lot}</td>
+          <td>${p.sl ?? '-'}</td>
+          <td>${p.tp ?? '-'}</td>
+          <td class="${p.pnl>=0?'pos':'neg'}">${p.pnl>=0?'+':''}${p.pnl.toFixed(2)}</td>
+          <td>${p.strategy||'-'}</td>
+          <td>-</td>
+        </tr>`).join('');
+    } else {
+      posBody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);">ไม่มีตำแหน่งเปิดค้างอยู่</td></tr>';
+    }
+  }catch(err){}
+}
+
+function biasClass(bias){
+  if(bias === 'BUY') return 'buy';
+  if(bias === 'SELL') return 'sell';
+  return 'flat';
+}
+
+async function loadStrategies(){
+  try{
+    const res = await fetch(API_BASE + '/api/strategies');
+    if(!res.ok) return;
+    const data = await res.json();
+    if(!data.strategies) return;
+    globalStrategiesData = data.strategies; // เก็บไว้ส่งให้ AI
+    renderStrategies(data.strategies, null); 
+  }catch(err){}
+}
+
+// แยก Render function มาเพื่ออัปเดตเมื่อผลลัพธ์จาก AI มาถึง
+function renderStrategies(strategies, aiReadinessMap) {
+  const grid = document.getElementById('strategyGrid');
+  if(!strategies || strategies.length === 0) return;
+  
+  grid.innerHTML = strategies.map(s => {
+    // ใช้คะแนนและความเห็นตัวจริงจาก AI ถ้าหากมีผลลัพธ์ยิงกลับมาแล้ว
+    const aiData = aiReadinessMap ? aiReadinessMap.find(item => item.name === s.label) : null;
+    const displayScore = aiData ? aiData.readiness_score : s.score;
+    const displayReason = aiData ? aiData.reason : "รอ AI ช่วยประเมินบริบทตลาด...";
+    const finalReady = aiData ? (displayScore >= 65) : s.tradeReady;
+    
+    const cls = biasClass(finalReady ? s.bias : 'flat');
+    const conds = s.conditions.map(c => `
+      <div class="cond-row ${c.met?'met':''} ${cls==='buy'?'buy-row':''}">
+        <span class="cname">${c.name}</span>
+        <span class="cfrac">${c.weight}/${c.max}</span>
+      </div>`).join('');
+      
+    const tradeLabel = finalReady
+      ? `${s.bias === 'BUY' ? '▲' : '▼'} Trade ${s.bias}`
+      : '— รอสัญญาณ';
+      
+    return `
+      <div class="strat-card bias-${cls}">
+        <div class="strat-top">
+          <div class="strat-name">${s.label}</div>
+          <div class="strat-pct">
+            <span class="bias-tag ${cls}">${finalReady ? (s.bias==='BUY'?'▲ BUY':'▼ SELL') : '—'}</span>
+            <span class="score ${cls}">${displayScore}%</span>
+          </div>
+        </div>
+        <div class="meter"><div class="meter-fill ${cls}" style="width:${displayScore}%"></div></div>
+        ${conds}
+        <div class="signal-row">
+          <span>แนวโน้ม: ${s.bias} (${s.conditions.filter(c=>c.met).length}/${s.conditions.length} ผ่าน)</span>
+          <span class="signal-bar ${cls}">${tradeLabel}</span>
+        </div>
+        <div class="ai-reason">💡 <b>AI Analysis:</b> ${displayReason}</div>
+      </div>`;
+  }).join('');
+}
+
+// ฟังก์ชันเรียก API หลังบ้านฝั่ง Vercel เพื่อเรียกใช้ AI วิเคราะห์
+async function runAiAdvisor() {
   const key = localStorage.getItem('ai_key');
   const model = localStorage.getItem('ai_model') || 'gemini-2.5-flash';
-  if(!key) return;
-
+  
+  if(!key || !globalAccountData) return;
+  
   try {
-    // โครงสร้างดึงข้อมูลจำลองและข้อมูลจริงส่งไปคัดกรอง
     const payload = {
       user_api_key: key,
       ai_model: model,
-      symbols_to_analyze: trackedSymbols, // ส่งอาเรย์รายชื่อปุ่มทั้งหมดขึ้นไป
-      account_summary: { balance: 10000, drawdown: 1.2 } // ดึงจากหน้าจอไปควบคู่กันได้
+      market_data: {
+        account_summary: globalAccountData.account,
+        open_positions: globalAccountData.positions || [],
+        strategies_performance: globalStrategiesData
+      }
     };
-
-    const res = await fetch('/api/ai-advisor', {
+    
+    const res = await fetch(API_BASE + '/api/ai-advisor', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
+    
     if(!res.ok) return;
     const data = await res.json();
     
-    // เอาผลลัพธ์แนวโน้มที่ AI กรองคู่เงินเสร็จแล้วมาแมปลงปุ่มเพื่อเปลี่ยนสี
-    if(data.trends) {
-      symbolTrends = data.trends;
-      renderSymbolButtons(); // อัปเดตสีปุ่มบนหน้าจอทันที!
+    // อัปเดต UI ส่วนกล่องวิเคราะห์พอร์ต
+    if(data.portfolio_summary) {
+      document.getElementById('aiBriefBox').style.display = 'block';
+      document.getElementById('aiBriefText').innerHTML = `[ความเสี่ยง: <b>${data.risk_alert_level}</b>] ${data.portfolio_summary}`;
     }
+    
+    // อัปเดต UI ส่วนกลยุทธ์ตามข้อมูลความพร้อมที่ AI ปรับคะแนนให้
+    if(data.strategies_readiness) {
+      renderStrategies(globalStrategiesData, data.strategies_readiness);
+    }
+    
   } catch(err) {
-    console.error(err);
+    console.error("AI Update Error:", err);
   }
 }
 
-// เรียกตัวประมวลผลเปลี่ยนสีปุ่มทุกๆ 15 วินาที
-setInterval(runAiMultiAssetAnalysis, 15000);
+loadQueue();
+loadStatus();
+loadStrategies();
+setInterval(loadQueue, 5000);
+setInterval(loadStatus, 5000);
+setInterval(loadStrategies, 5000);
+
+// แยก Interval ให้ AI ทำงานทุกๆ 10 วินาทีเพื่อลดปริมาณการยิงข้าม API ที่ถี่เกินไป
+setInterval(runAiAdvisor, 10000);
 </script>
 </body>
 </html>
